@@ -1,4 +1,4 @@
-# V2X EV優先 + Mix Zone 系統（精煉版流程架構）
+# V2X EV優先 + Mix Zone 系統
 
 # 一、整體架構（兩層系統）
 
