@@ -45,6 +45,7 @@ graph TD
 
 ### 2. 同步換名 (Synchronized Pseudonym Rotation)
 *   **關鍵機制**：**80% Quorum (法定人數)**。
+*   bspBroadcast (廣播期 Tb)：4 秒+pSilence (靜默期 Ts)：1 秒
 *   **流程**：
     1.  RSU 下令進入靜默期 (Ts)。
     2.  車輛檢查 TTC 安全，回報 `PSEUDONYM_PENDING`。
