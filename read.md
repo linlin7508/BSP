@@ -146,4 +146,27 @@ Ran command: `Select-String -Pattern "STATE_" results/BSP10Hz-rsu-new.csv | Sele
 3.  **亮點三：效率增益**
     *   **166% 的速度優化** 是一個非常有說服力的數字，足以證明基於 RSU 中心化調度（Tier 2）優於傳統局部避讓。
 
-**您需要我針對這 4 個 Session 的詳細換名時間差進行更深入的「同步精度」分析嗎？或者需要為這些數據產生特定的圖表程式碼？**
+vehicle.cc 現在每 0.1 秒會精確計算 TTC (Time-to-Collision) 與 TTS (Time-to-Stop, $v / 4.5$)。
+新增了 distToLeader（與前車距離）與 leaderSpeed（前車車速）欄位，用於追蹤物理行為。
+模擬配置更新：
+在 omnetpp.ini 中新增了 [Config Baseline_NoMZ]。
+該配置已關閉 Mix Zone 觸發，並設定 repeat = 100（會自動跑 100 個不同的機率種子）。
+每個 Run 的數據會存儲為獨立檔案：results/Baseline-${runnumber}-vehicles.csv。
+統計分析工具：
+建立了 
+
+analyze_collision_prob.py
+，它會掃描 100 次運行結果，根據原論文公式計算不同 $Ts$ 下的「無碰撞比例」。
+🚀 如何執行分析？
+由於 100 次模擬耗時較長，我建議採取的執行指令如下：
+
+1. 執行模擬 (建議先跑前 20 次快速驗證)：
+
+powershell
+# 在 examples/easy 目錄下執行
+# -r 0..19 代表只跑前 20 個隨機種子
+opp_runall -n ".;../../src/veins" -c Baseline_NoMZ -r 0..19 ../../src/veins/modules/application/homework/rsu.cc ../../src/veins/modules/application/homework/vehicle.cc
+2. 執行分析腳本：
+
+powershell
+python analyze_collision_prob.py
