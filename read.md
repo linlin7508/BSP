@@ -146,6 +146,9 @@ Ran command: `Select-String -Pattern "STATE_" results/BSP10Hz-rsu-new.csv | Sele
 3.  **亮點三：效率增益**
     *   **166% 的速度優化** 是一個非常有說服力的數字，足以證明基於 RSU 中心化調度（Tier 2）優於傳統局部避讓。
 
+
+########################
+
 vehicle.cc 現在每 0.1 秒會精確計算 TTC (Time-to-Collision) 與 TTS (Time-to-Stop, $v / 4.5$)。
 新增了 distToLeader（與前車距離）與 leaderSpeed（前車車速）欄位，用於追蹤物理行為。
 模擬配置更新：
