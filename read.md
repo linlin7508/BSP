@@ -171,7 +171,7 @@ powershell
 opp_runall -n ".;../../src/veins" -c Baseline_NoMZ -r 0..19 ../../src/veins/modules/application/homework/rsu.cc ../../src/veins/modules/application/homework/vehicle.cc
 2. 執行分析腳本：
 
-powershell
+cd c:\Users\ISIRL_V2X_BSP\Desktop\omnetpp\veins-5.2-1150305\veins-5.2\examples\easy
 python analyze_collision_prob.py
 
 Found 33 files. Analyzing safety metrics...
