@@ -173,3 +173,20 @@ opp_runall -n ".;../../src/veins" -c Baseline_NoMZ -r 0..19 ../../src/veins/modu
 
 powershell
 python analyze_collision_prob.py
+
+Found 33 files. Analyzing safety metrics...
+
+==================================================
+COLLISION-FREE PROPORTION ANALYSIS (BSP METHODOLOGY)
+==================================================
+Total Samples Analyzed: 147608
+--------------------------------------------------
+Silence (Ts)    | Violations   | Safety Rate      
+--------------------------------------------------
+       0.5s     |         1496 |      98.99%      
+       1.0s     |        12060 |      91.83%      
+       1.5s     |        19669 |      86.67%      
+       2.0s     |        20743 |      85.95%      
+--------------------------------------------------
+Recommended Ts (90% threshold): 1.0s
+==================================================
