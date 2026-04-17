@@ -147,6 +147,45 @@ Ran command: `Select-String -Pattern "STATE_" results/BSP10Hz-rsu-new.csv | Sele
     *   **166% 的速度優化** 是一個非常有說服力的數字，足以證明基於 RSU 中心化調度（Tier 2）優於傳統局部避讓。
 
 
+Searched for "activeSession_.members.insert\|members.insert"
+Searched for "activeSession_.members"
+Viewed rsu.cc:1100-1200
+Viewed rsu.cc:1210-1240
+
+根據你目前的程式碼實作（主要在 `rsu.cc` 中），答案是：**不會收新加入的車輛進入當前的匿名集（Anonymity Set）。**
+
+以下是從程式碼邏輯分析的原因：
+
+### 1. 匿名集的鎖定機制 (`startMixZone`)
+在 Mix Zone 啟動時，`startMixZone` 函數（約第 1150 行）會將當前偵測到的成員名單一次性寫入 `activeSession_.members`：
+```cpp
+activeSession_.members = members; // members 是從 evaluateTrigger 傳進來的快照
+```
+此後，這個 `activeSession_.members` 清單在該次的整個生命週期內（包含多次的 Tb+Ts 循環）**只會減少（被剔除），不會增加**。
+
+### 2. 重複循環時的邏輯 (`advanceBspCycle`)
+當進入第二次或之後的廣播與靜默循環時，RSU 會執行 `advanceBspCycle`（約第 1213 行），它做的動作如下：
+*   呼叫 `pruneSessionMembers()`：把已經離開邊界或太久沒更新的舊成員**除名**。
+*   呼叫 `prepareNewPseudonyms(activeSession_.members)`：為**現有的**剩餘成員準備下一組假名。
+這裡**完全沒有**重新掃描環境中新車輛的動作。
+
+### 3. 中途加入預防邏輯 (Mid-way Join Prevention)
+在 `onWSM` 接收函數中（約第 1699 行），有一段專門處理「中途加入」的邏輯：
+```cpp
+// 實作 Mid-way Join Prevention: 若 Mix Zone 已啟動且不在當前名單內的新車
+if (mzActive_ && dLocal <= mzRadius_ && !isLeader && preHold_) {
+    if (mzMembers_.find(vid) == mzMembers_.end()) {
+        // ...這裡會對新車執行 Yield Control (避讓/暫停控制)
+    }
+}
+```
+這段程式碼明確表示：如果 Mix Zone 已經在運作，但某台車不在當初鎖定的 `mzMembers_` 名單中，它會被視為「外部干擾」，RSU 不僅不會把它拉進來換假名，還會對它實施交通控制（Yield Control），防止它影響正在進行 BSP 流程的車輛。
+
+### **結論與建議**
+*   **現況**：從第一次換假名到第二次換假名的中間，新進來的車輛**不會**被加入匿名集，也不會參與換假名。
+*   **設計用意**：這樣做是為了保證同步性（Synchronization）。參與同一個 Session 的車子必須步調一致（一起進入靜默、一起換假名）。中途插隊的車輛因為沒有收到初始的 `CMD_START_BSP` 封包，狀態機會跟不上，加入反而會導致混亂。
+*   **如果你希望收新車**：你必須在 `advanceBspCycle` 或是 `handleSelfMsg` 的 Active 狀態下，重新執行類似 `evaluateTrigger` 的掃描邏輯，並對新偵測到的車輛補發啟動指令。但這通常會增加實作的複雜度，且容易破壞匿名集的統計假設。
+
 ########################
 
 vehicle.cc 現在每 0.1 秒會精確計算 TTC (Time-to-Collision) 與 TTS (Time-to-Stop, $v / 4.5$)。
