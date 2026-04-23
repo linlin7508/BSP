@@ -130,6 +130,53 @@ Output: Target reaction range (d_reaction)
 | **Tier 1 Only** | ✅ ON | ❌ OFF | ❌ OFF |
 | **Full System** | ✅ ON | ✅ ON | ✅ ON |
 
+### System Evolution & Logic Flow
+
+以下流程圖展示了系統如何從 Baseline 演進至 Full System，以及各個層級新增的核心細項邏輯：
+
+```mermaid
+graph TD
+    subgraph "Baseline (Level 0)"
+        B1["SUMO Standard Physics"] --> B2["No V2X Communication"]
+        B2 --> B3["Standard Car Following (IDM/Krauss)"]
+    end
+
+    subgraph "Tier 1: Basic Bypass (Level 1)"
+        T1_1["EV Status Latched (RSU 10Hz)"] --> T1_2["EV SpeedMode = 0 (Bypass)"]
+        T1_2 --> T1_3["Gradient Leader Clearing"]
+        T1_3 --> T1_4["Aggressive EV Assist (Tau/MinGap)"]
+        T1_4 --> T1_5["Signal Bypass (Red Light)"]
+    end
+
+    subgraph "Full System: Predictive & Privacy (Level 2)"
+        F1_1["Tier 2 Corridor Maintenance"] --> F1_2["Predictive Lane Clearing (T_arrival < 6s)"]
+        F1_2 --> F1_3["Geometric Lateral Guard"]
+        F1_3 --> F1_4["BSP Mix Zone Protocol (Privacy)"]
+        F1_4 --> F1_5["Synchronized Pseudonym Rotation"]
+        F1_5 --> F1_6["Safety-TTC Threshold Guard"]
+    end
+
+    B3 -.->|"Add Priority Logic"| T1_1
+    T1_5 -.->|"Add Predictive & Privacy"| F1_1
+```
+
+### 系統功能細項對照表
+
+| 功能分類 | 功能細項 | Baseline | Tier 1 | Full System |
+| :--- | :--- | :---: | :---: | :---: |
+| **車輛物理** | 標準 SUMO 物理約束 | ✅ | ❌ (EV 除外) | ❌ (EV 除外) |
+| **EV 優先權** | 交通號誌無視 (Red Light Bypass) | ❌ | ✅ | ✅ |
+| | 強制換道模式 (Forced LC Mode) | ❌ | ✅ | ✅ |
+| | 激進跟車參數 (Low Tau/MinGap) | ❌ | ✅ | ✅ |
+| **路徑清理** | 梯度式前導車清理 (Gradient Clearing) | ❌ | ✅ | ✅ |
+| | 預測式長距離廊道清理 (Corridor) | ❌ | ❌ | ✅ |
+| | 幾何側向保護 (Lateral Guard) | ❌ | ❌ | ✅ |
+| **隱私保護** | 同步假名更換 (Sync Pseudonyms) | ❌ | ❌ | ✅ |
+| | 靜默期通訊控制 (Silence Phase) | ❌ | ❌ | ✅ |
+| | 匿名集合閾值檢查 (Theta Guard) | ❌ | ❌ | ✅ |
+| **安全機制** | TTC/TTS 實時安全碰撞監控 | ❌ | ❌ | ✅ |
+
+
 ### Table 3: Emergency Vehicle Performance Metrics
 | Case | Average Travel Time (s) | Avg Speed (m/s) | Forced Stop Count | Minimum Speed (m/s) |
 | :--- | :--- | :--- | :--- | :--- |
