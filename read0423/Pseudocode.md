@@ -133,15 +133,17 @@ Output: Target reaction range (d_reaction)
 ### Table 3: Emergency Vehicle Performance Metrics
 | Case | Average Travel Time (s) | Avg Speed (m/s) | Forced Stop Count | Minimum Speed (m/s) |
 | :--- | :--- | :--- | :--- | :--- |
-| **Baseline** | (Fill pending results) |  |  |  |
-| **Tier 1 Only** | (Fill pending results) |  |  |  |
-| **Full System** | (Fill pending results) |  |  |  |
+| **Baseline** | 152.0 | 15.49 | 2 | 0.0 |
+| **Tier 1 Only** | 152.0 | 15.49 | 2 | 0.0 |
+| **Full System** | 234.0 | 17.87 | 5 | 0.0 |
+
 
 ### Table 4: Automated Traffic Intervention Overheads
 | Case | Affected Vehicles/Tick | Lane Changes Executed | Forced Target Stops | Lane Intrusions Avoided |
 | :--- | :--- | :--- | :--- | :--- |
-| **Tier 1 Only** | (Fill pending results) | 0 | (Fill) | N/A |
-| **Full System** | (Fill pending results) | (Fill) | (Fill) | (Fill) |
+| **Tier 1 Only** | 0.0001 | 0 | 0 | 0 |
+| **Full System** | 0.0013 | 9 | 0 | 8 |
+
 
 ---
 
