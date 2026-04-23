@@ -52,3 +52,20 @@
 | `bspBroadcast` (Tb) | 4 | s | 進入靜默前的廣播同步時間 |
 | `bspSilence` (Ts) | 1 | s | 車輛停止通訊的靜默時長 |
 | `commReadyTimeout` | 4 | s | 等待車輛 ACK 的最長時間 |
+
+## 實測結果表 (Simulation Results)
+
+以下為最近一次模擬中，EV 經過各個 RSU 時的 Mix Zone 啟動與周邊車輛統計數據（由 `analyze_ev_rsu.py` 生成）：
+
+| RSU | Approach Time (s) | Leave Time (s) | Unique Other Vehicles (In 120m) | Max Simultaneous Others |
+| --- | --- | --- | --- | --- |
+| RSU[3] | 247.0 | 258.0 | 2 | 8 |
+| RSU[4] | 259.0 | 264.0 | 0 | 0 |
+| RSU[7] | 163.0 | 233.0 | 11 | 20 |
+| RSU[8] | 233.0 | 247.0 | 2 | 3 |
+| RSU[11] | 124.0 | 140.0 | 9 | 17 |
+| RSU[12] | 140.0 | 162.0 | 13 | 23 |
+| RSU[15] | 67.0 | 103.0 | 11 | 29 |
+| RSU[16] | 104.0 | 124.0 | 12 | 20 |
+| RSU[20] | 61.0 | 66.0 | 0 | 0 |
+
