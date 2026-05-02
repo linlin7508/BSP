@@ -64,3 +64,323 @@
 - **禁止阻擋（mustNotBlock）≠ 強制移開**：不使用 `setSpeed(0)` 清空、也不做全域停車
 - **偏好（bias）≠ 隨機（random/probability）**：不引入隨機機率，避免行為爆炸
 - **防補位（cooldown）**：車輛剛讓完路後，短時間內禁止立刻切回（避免補位卡住 EV）
+
+# 🔄 RSU 智能清理系統 - 版本差異整理
+
+---
+
+# 1. 🧠 系統核心哲學變更（最重要）
+
+## 🟦 舊版（Rerouting & Corridor-first）
+
+### 核心思想
+
+```text id="v8kq2p"
+EV = center
+RSU = proactive traffic rewriter
+```
+
+### 特徵
+
+* 強制清空（force clearing）
+* 強制換道
+* 高介入交通控制
+* 假設：
+
+  > traffic can be fully controlled
+
+---
+
+## 🟩 新版（Trinity Control / Tiered System）
+
+### 核心思想
+
+```text id="x1wq9k"
+EV priority + bounded intervention + safety constraint system
+```
+
+### 特徵
+
+* 不再全域控制
+* 改為三層控制：
+
+  * Lane Reservation
+  * Opposite-lane assist
+  * Strategic Boost
+
+---
+
+### 🔥 本質差異
+
+| 面向   | 舊版       | 新版                  |
+| ---- | -------- | ------------------- |
+| 控制哲學 | 強制清空     | 約束式優化               |
+| 車流假設 | 可完全重寫    | 只能局部影響              |
+| 安全模型 | implicit | explicit constraint |
+
+---
+
+# 2. 🚧 Lane Reservation（重大變更）
+
+---
+
+## 🟨 舊版
+
+### 行為：
+
+* 無顯式 lane lock
+* 用：
+
+  * forced lane change
+  * slowdown
+  * stop
+
+👉 問題：
+
+* 會造成：
+
+  * lane oscillation
+  * deadlock risk
+
+---
+
+## 🟩 新版（關鍵升級）
+
+### 機制：
+
+```text id="6q9x0a"
+LaneChangeMode(512)
+```
+
+### 行為：
+
+* 鎖車道
+* 阻止 cut-in
+* 建立 "virtual corridor"
+
+---
+
+### 🔥 本質提升
+
+| 項目            | 舊版       | 新版          |
+| ------------- | -------- | ----------- |
+| 車道穩定性         | 低        | 高           |
+| deadlock risk | 存在       | 幾乎消除        |
+| EV 前方清空       | reactive | pre-emptive |
+
+---
+
+# 3. 🚗 Opposite-lane Mechanism（重大新增）
+
+---
+
+## 🟨 舊版
+
+* 沒有真正 opposite lane model
+* 僅 forward clearing
+
+---
+
+## 🟩 新版（新增核心能力）
+
+### 概念：
+
+```text id="4kzq9r"
+EV can temporarily use opposite lane
+```
+
+### RSU 行為：
+
+* detect EV intention
+* push opposite traffic away
+
+---
+
+### 🔥 影響
+
+| 面向                    | 舊版       | 新版       |
+| --------------------- | -------- | -------- |
+| deadlock handling     | weak     | strong   |
+| intersection conflict | possible | resolved |
+| EV flexibility        | limited  | high     |
+
+---
+
+# 4. ⚡ Speed Control Strategy 變更
+
+---
+
+## 🟨 舊版（暴力型）
+
+```text id="9xq1we"
+setSpeed(0.1)
+setSpeed(max)
+forcedStop
+```
+
+### 問題：
+
+* shockwave traffic
+* rear collision risk
+* unrealistic behavior
+
+---
+
+## 🟩 新版（Strategic Boost）
+
+### 改為：
+
+```text id="m2k9rz"
+SpeedMode(0) + adaptive max boost
+```
+
+---
+
+### 分層控制：
+
+| 距離       | 行為              |
+| -------- | --------------- |
+| >35m     | no intervention |
+| <35m     | boost / push    |
+| blocking | lateral escape  |
+
+---
+
+### 🔥 改進
+
+| 項目                | 舊版       | 新版         |
+| ----------------- | -------- | ---------- |
+| traffic stability | poor     | smooth     |
+| safety realism    | low      | high       |
+| control type      | discrete | continuous |
+
+---
+
+# 5. 📊 Performance Metrics 差異（非常重要）
+
+---
+
+## 🟨 舊版數據
+
+| 指標                     | 問題   |
+| ---------------------- | ---- |
+| 152s → 110s            | ✔ OK |
+| 0 stop                 | ✔ OK |
+| 但：                     |      |
+| ❌ intervention cost未解釋 |      |
+
+---
+
+## 🟩 新版數據（加入語意層）
+
+### 新增解釋：
+
+| 指標                | 意義                      |
+| ----------------- | ----------------------- |
+| affected vehicles | system footprint        |
+| lane changes      | control aggressiveness  |
+| slowdown count    | soft intervention ratio |
+
+---
+
+### 🔥 差異
+
+| 面向               | 舊版   | 新版     |
+| ---------------- | ---- | ------ |
+| interpretability | low  | high   |
+| paper value      | weak | strong |
+
+---
+
+# 6. 🧩 系統安全模型變更
+
+---
+
+## 🟨 舊版
+
+* safety = implicit
+* rely on:
+
+  * forced stop
+  * deceleration
+
+---
+
+## 🟩 新版
+
+### explicit safety rules：
+
+* 路口排除 (`:junction skip`)
+* EV identity lock (`EV_leader1`)
+* TraCI crash prevention
+
+---
+
+### 🔥 改進
+
+| 項目                   | 舊版       | 新版        |
+| -------------------- | -------- | --------- |
+| simulation stability | medium   | high      |
+| reproducibility      | low      | high      |
+| crash risk           | possible | minimized |
+
+---
+
+# 7. 📈 數據來源可信度（重大差異）
+
+---
+
+## 🟨 舊版
+
+* metrics：
+
+  * hand collected
+  * partially inferred
+
+---
+
+## 🟩 新版
+
+### pipeline：
+
+```text id="c1q8xz"
+SUMO logs
+→ paper_metrics_full.csv
+→ analysis scripts
+→ tables
+```
+
+---
+
+### 🔥 upgrade
+
+| 項目              | 舊版        | 新版                |
+| --------------- | --------- | ----------------- |
+| reproducibility | weak      | strong            |
+| auditability    | low       | high              |
+| research grade  | prototype | publication-ready |
+
+---
+
+# 8. 🧠 系統層級差異總結
+
+---
+
+## 🟦 舊版模型
+
+```text id="v2k9xa"
+RSU = traffic rewriter
+```
+
+---
+
+## 🟩 新版模型
+
+```text id="p9q1ld"
+RSU =
+  multi-layer controller:
+    - lane reservation layer
+    - speed shaping layer
+    - opposite lane coordination layer
+    - EV priority arbitration
+```
