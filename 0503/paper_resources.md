@@ -184,3 +184,223 @@ plt.grid(True)
 plt.legend()
 plt.savefig("fig2_interventions.png")
 ```
+
+
+# 🔄 Mix Zone 文件版本差異整理（Change Log）
+
+## 📌 版本對照
+
+| 版本                               | 特徵                                          |
+| -------------------------------- | ------------------------------------------- |
+| 舊版（Original Spec）                | 偏 FSM / RSU control / protocol 描述           |
+| 新版（Enhanced / Evaluation-driven） | 偏 simulation metrics / data-driven analysis |
+
+---
+
+# 1. 🧠 最大變更：從「系統描述」→「可量化分析模型」
+
+## 🟦 舊版
+
+* Focus：Mix Zone FSM 行為
+* 強調：
+
+  * INACTIVE → DRAINING 流程
+  * RSU 控制邏輯
+  * 假名池設計（architecture level）
+
+## 🟩 新版
+
+* Focus：**可計算的 simulation output**
+* 新增：
+
+  * RSU 通過時間統計
+  * 車流密度統計（Unique / Simultaneous vehicles）
+  * EV trajectory derived metrics
+
+👉 本質差異：
+
+> 舊版 = protocol design
+> 新版 = evaluation instrumentation
+
+---
+
+# 2. 📊 實測結果表（最重要變更）
+
+## 🟨 指標來源變更
+
+| 指標              | 舊版                     | 新版                                      |
+| --------------- | ---------------------- | --------------------------------------- |
+| RSU timeline    | hand-written / assumed | `calc_mz_table.py` from `trip_full.csv` |
+| vehicle counts  | 未明確定義                  | 明確定義算法                                  |
+| coverage window | implicit               | 120m explicit                           |
+
+---
+
+## 🟩 新增嚴格定義
+
+### Unique Other Vehicles
+
+```
+EV 通過 RSU 120m 範圍內「出現過的不重複車輛數」
+```
+
+### Max Simultaneous Others
+
+```
+同一時間點內的最大車輛重疊數
+```
+
+👉 舊版沒有這種 temporal decomposition
+
+---
+
+## 🧠 影響（論文層級）
+
+這個改動讓你的分析從：
+
+* ❌ snapshot-based
+  → 變成
+* ✅ time-window interaction model
+
+---
+
+# 3. 🚗 RSU 表格差異
+
+## 🟨 舊版特性
+
+* Approach / Leave time 偏 narrative
+* 未明確說明來源
+
+## 🟩 新版特性
+
+* 明確：
+
+  * derived from `trip_full.csv`
+  * EV trajectory reconstruction
+* 加入：
+
+  * density interpretation（implicit traffic condition）
+
+---
+
+## 🔥 最大變化
+
+| 面向             | 舊版           | 新版                |
+| -------------- | ------------ | ----------------- |
+| 資料來源           | static table | computed pipeline |
+| 可重現性           | low          | high              |
+| research grade | medium       | high              |
+
+---
+
+# 4. ⚙️ FSM 描述（幾乎未變，但語意升級）
+
+## 🟨 舊版
+
+* protocol-level description
+* focusing on RSU control
+
+## 🟩 新版
+
+* implicit coupling to metrics pipeline
+* FSM 成為：
+
+  > “data generation mechanism”
+
+---
+
+# 5. 🔐 假名池設計（語意強化）
+
+## 🟨 舊版
+
+* 強調：
+
+  * EV / Veh / MZ separation
+  * slicing mechanism
+
+## 🟩 新版（隱含升級）
+
+新增 implicit interpretation：
+
+### EV_Pseud.txt
+
+→ **identity persistence guarantee**
+
+### Veh_pseud.txt
+
+→ **background churn model**
+
+### pseudonyms.txt
+
+→ **ephemeral anonymity pool (Mix Zone bound)**
+
+---
+
+👉 差異核心：
+
+| 舊版                    | 新版                             |
+| --------------------- | ------------------------------ |
+| system design         | privacy model abstraction      |
+| implementation detail | adversarial resistance framing |
+
+---
+
+# 6. 📈 實驗結果語意變更（非常重要）
+
+## 🟨 舊版結論
+
+> EV travel improvement due to lane reservation + opposite lane driving
+
+## 🟩 新版隱含擴展
+
+新增 implicit meaning：
+
+### ✔ traffic efficiency layer
+
+* zero-stop objective
+
+### ✔ privacy-preserving mobility layer
+
+* Mix Zone independent evaluation
+
+---
+
+## 🧠 關鍵變化
+
+舊版：
+
+```
+performance improvement = main result
+```
+
+新版：
+
+```
+performance + privacy + density interaction = joint system evaluation
+```
+
+---
+
+# 7. 🧩 整體架構變化總結
+
+## 🔵 舊系統視角
+
+```
+RSU FSM → Mix Zone → vehicles → output logs
+```
+
+## 🟢 新系統視角
+
+```
+RSU FSM
+   ↓
+log generation layer
+   ↓
+trip_full.csv
+   ↓
+analysis pipeline (calc scripts)
+   ↓
+metrics (unique / simultaneous / timing)
+   ↓
+paper results
+```
