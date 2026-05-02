@@ -184,3 +184,304 @@ plt.grid(True)
 plt.legend()
 plt.savefig("fig2_interventions.png")
 ```
+
+
+# 🔄 V2X Paper Resources - 版本差異整理
+
+---
+
+# 1. 🧠 整體架構變化（最重要）
+
+## 🟦 舊版（Original Resources）
+
+### 特徵
+
+* Algorithm 1：RSU control + Mix Zone 混合
+* Algorithm 2：Tier1 + Corridor 混在同一模型
+* Algorithm 2b：補充 Tier1 bias
+* Dynamic distance = 分離 Algorithm 4
+
+👉 結構問題：
+
+* control logic **耦合**
+* Tier1 / Full System **邊界不清**
+
+---
+
+## 🟩 新版（Refactored Paper Version）
+
+### 特徵
+
+* Algorithm 1：RSU loop（乾淨 state machine）
+* Algorithm 2：Tier1（獨立模型）
+* Algorithm 3：Tier2 Corridor（獨立 predictive layer）
+* Algorithm 4：dynamic distance（正式 modularization）
+
+👉 改動本質：
+
+| 舊版                 | 新版                         |
+| ------------------ | -------------------------- |
+| monolithic control | modular layered control    |
+| hybrid pseudo code | decomposition architecture |
+| implicit logic     | explicit functions         |
+
+---
+
+# 2. ⚙️ Algorithm 設計差異
+
+---
+
+# 🟨 Algorithm 1（RSU Loop）
+
+## 舊版問題
+
+```text
+EV detection + Tier1 + Mix Zone + logging
+全部混在同一 loop
+```
+
+### 問題：
+
+* 不符合 paper review expectation
+* reviewer 會說：❌ "unclear system boundaries"
+
+---
+
+## 🟩 新版改進
+
+### 清楚分層：
+
+```text
+RSU loop
+ ├── EV detection
+ ├── Control layer (Tier1 / Corridor)
+ ├── Privacy layer (Mix Zone FSM)
+ ├── Logging layer
+```
+
+---
+
+### 🔥 重大改動
+
+| 面向                | 舊版         | 新版                    |
+| ----------------- | ---------- | --------------------- |
+| EV selection      | inline     | modular function      |
+| control execution | embedded   | EXECUTE_HOLD()        |
+| privacy system    | inline FSM | separated FSM handler |
+| clarity           | low        | high                  |
+
+---
+
+# 3. 🚗 Control Model 差異（Tier1 / Tier2）
+
+---
+
+## 🟨 舊版 Tier1
+
+### 特點
+
+* deterministic bias + corridor 混合
+* EV enhancement + lane reservation + speed boost 同時存在
+
+👉 問題：
+
+* Tier1 ≠ clear definition
+* reviewer 會問：
+
+  > "what exactly is Tier1?"
+
+---
+
+## 🟩 新版 Tier1
+
+### 清楚定義：
+
+```text
+Tier1 = gradient EV-assisted yielding
+```
+
+### 特徵：
+
+* no global force
+* bounded zone (150m)
+* smooth bias (0.85x slowdown etc.)
+
+---
+
+### 🔥 關鍵差異
+
+| 指標            | 舊版                    | 新版                |
+| ------------- | --------------------- | ----------------- |
+| lane change   | forced + predictive   | gradient bias     |
+| speed control | aggressive + override | bounded smoothing |
+| EV priority   | mixed                 | explicit          |
+
+---
+
+## 🟩 Tier2（新增 clarity）
+
+### 新版才有：
+
+* predictive clearance
+* t_arrival based decision
+* 6s horizon model
+
+👉 這是 major upgrade：
+
+> from reactive → predictive control
+
+---
+
+# 4. 📊 Mix Zone / Privacy Layer差異
+
+---
+
+## 🟨 舊版
+
+* FSM 描述
+* pseudonym pools
+* silence + draining
+
+👉 但：
+
+* 沒有 integration 到 RSU loop clarity
+
+---
+
+## 🟩 新版
+
+### 明確：
+
+```text
+Privacy System = optional overlay layer
+```
+
+### integration方式：
+
+* only active if:
+
+```text
+enableMixZone == true
+```
+
+---
+
+### 🔥 改進點
+
+| 項目            | 舊版          | 新版                                  |
+| ------------- | ----------- | ----------------------------------- |
+| FSM           | standalone  | controlled by RSU loop              |
+| trigger logic | implicit    | explicit EVALUATE_PRIVACY_TRIGGER() |
+| execution     | semi-hidden | observable state machine            |
+
+---
+
+# 5. 📈 Metrics & Experiment Design 差異
+
+---
+
+## 🟨 舊版
+
+* Table 3 / 4：
+
+  * placeholder (TBD)
+  * no data pipeline link
+
+👉 reviewer problem：
+
+> ❌ "not reproducible"
+
+---
+
+## 🟩 新版
+
+### 明確 pipeline：
+
+```text
+paper_metrics_full.csv
+trip_full.csv
+→ python analysis scripts
+→ tables
+```
+
+---
+
+### 🔥 改進：
+
+| 面向               | 舊版      | 新版        |
+| ---------------- | ------- | --------- |
+| reproducibility  | low     | high      |
+| data origin      | unclear | explicit  |
+| table generation | manual  | automated |
+
+---
+
+# 6. 🧪 Experimental Design 差異
+
+---
+
+## 🟨 舊版
+
+* baseline / tier1 / full system
+
+👉 問題：
+
+* control overlap unclear
+
+---
+
+## 🟩 新版
+
+### 明確 hierarchy：
+
+```text
+Baseline
+Tier1 (bounded EV assist)
+Tier2 (predictive corridor)
+Full System = Tier1 + Tier2 + Privacy
+```
+
+---
+
+### 🔥 impact：
+
+| 層級  | clarity               |
+| --- | --------------------- |
+| old | ambiguous             |
+| new | publishable structure |
+
+---
+
+# 7. 📉 System Evolution Diagram 差異
+
+---
+
+## 🟨 舊版
+
+* linear evolution:
+
+```
+Baseline → Tier1 → Tier2 → Privacy
+```
+
+---
+
+## 🟩 新版
+
+### graph structure：
+
+* separates:
+
+  * performance layer
+  * privacy layer
+
+---
+
+### 核心差異：
+
+| 舊版                | 新版                    |
+| ----------------- | --------------------- |
+| single pipeline   | dual-layer system     |
+| sequential logic  | parallel systems      |
+| implicit coupling | explicit independence |
+
