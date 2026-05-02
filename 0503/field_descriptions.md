@@ -1,96 +1,210 @@
-# CSV 欄位說明（examples/easy）
+# 📄 CSV 欄位說明（統一版本）
 
-此資料夾的輸出主要來自 RSU 的 10Hz tick logging 與 BSM logging。
-
----
-
-## 1) `results/paper_metrics_full.csv`
-
-每個 tick 會輸出一列，用於 paper-level 評估（EV 效能 + 系統介入成本）。
-
-| 欄位 | 說明 |
-| --- | --- |
-| `time` | `simTime()`（秒） |
-| `rsu_id` | RSU index |
-| `ev_id` | EV 的 external id（找不到時可能為空字串） |
-| `speed` | EV 速度（m/s） |
-| `position_x`, `position_y` | EV 座標 |
-| `lane` | EV lane index（若取不到則 -1） |
-| `accel` | EV 加速度（m/s^2） |
-| `is_stopped` | EV 本 tick 是否視為停住（speed < 0.1） |
-| `stop_count` | EV 累計停住次數（edge detection） |
-| `min_speed` | EV 最低速度（若無資料則 -1） |
-| `dist_to_rsu` | EV 到 RSU center 的距離（m） |
-| `dist_to_tls` | EV 到下一個 TLS 的距離（m），取不到則 -1 |
-| `evExists` | 本 tick 是否偵測到 EV |
-| `evLatched` | 目前與 `evExists` 相同（保留欄位） |
-| `evAssisted` | 本 tick 是否有套用任何 EV assist / Tier1 規則（1/0） |
-| `corridorActive` | `enableCorridor` 是否開啟（Full System） |
-| `mzActive` | Mix Zone 是否正在運作 |
-| `dynamicDist` | EV assist 動態距離/視窗（目前作為 runtime 診斷用） |
-| `controlMode` | 文字模式：Baseline / Tier1_Only / Tier_1_and_2 / Full_System 等 |
-| `numVehiclesAffected` | 本 tick 介入到的車輛數（累加計數器） |
-| `numLaneChanges` | 本 tick 記錄到的變道數（累加計數器） |
-| `numForcedStops` | 本 tick 強制停車數（Tier1 版本通常應趨近 0） |
-| `numSlowdowns` | 本 tick 減速介入數 |
-| `laneIntrusionCount` | 本 tick lane reservation 相關干預（主要屬於 Full System） |
-
-> 註：Tier1 更新後的設計目標是「不全停、不強制清道」，因此 `numForcedStops` 在 Tier1_Only 情境下理論上應大幅下降。
+本文整理模擬系統輸出的所有 CSV 欄位，並標註不同版本（Full System vs examples/easy / Tier1）之差異。
 
 ---
 
-## 2) RSU / Vehicle BSM 相關 CSV
+# 1. 📊 `paper_metrics_full.csv`（核心控制與 EV / RSU 指標）
 
-若你有開啟對應 logging（例如 BSM row），常見欄位意義如下：
+## 🧠 用途
 
-| 欄位 | 說明 |
-| --- | --- |
-| `subType` | 事件子類型（例如 `START_MZ`, `ENTER_TS`, `BSM`） |
-| `mzState` | Mix Zone FSM state（INACTIVE/WAIT_READY/BSP_ACTIVE/SILENCE/DRAINING） |
-| `pseudoId` | 車輛目前使用的 pseudonym |
-| `anonSet` | Mix Zone 匿名集合大小（若非 MZ 期間可能為 -1） |
-| `sessionId` | Mix Zone session id（若非 MZ 期間可能為 -1） |
-| `x`, `y` | 車輛座標 |
-| `speed`, `acl` | 車輛速度與加速度 |
-
-## 3. 車輛行蹤與隱私日誌 (`trip_full.csv`)
-記錄每輛車在每個時間步的詳細數據。
-
-| 欄位名稱 | 說明 | 來源/計算方式 |
-| :--- | :--- | :--- |
-| `vehIndex` | 車輛 ID | 模擬內部的車輛索引 |
-| `inSilence` | 是否處於靜默期 | 1: 正在靜默 (Ts), 0: 正常通訊 |
-| `evDist` | 與最近 EV 的距離 | 車輛位置與 EV 位置的歐式距離 |
-| `ttc` | 碰撞預警時間 (Time to Collision) | 基於前車距離與相對速度計算 |
-| `tts` | 停止預警時間 (Time to Stop) | 車輛停止行駛所需的預計時間 |
-| `pseudoId` | 車輛當前使用的假名 | 隨時間變化的假名 ID (如 `PSEU-` 或 `mz_`) |
-| `mzActive` | Mix Zone 啟用狀態 | 1: 受 RSU 指令啟動中, 0: 未啟動 |
-| `phaseStart, phaseEnd` | BSP 階段時間 | 當前 BSP 循環的預計起始與結束時間 |
-| `duration` | 階段持續時長 | $phaseEnd - phaseStart$ |
-| `evDist` | 與 EV 的實時距離 | 當前車輛與 EV 的相對距離 |
-| `distToLeader` | 與前方引導車距離 | 基於 TraCI 取得的前車間距 |
-| `leaderSpeed` | 前方引導車速度 | 前車的即時速率 |
-
-
-## 4. 隱私評估日誌 (`privacy_metrics.csv`)
-專門記錄每個 Mix Zone Session 的隱私收益。
-
-| 欄位名稱 | 說明 | 來源/計算方式 |
-| :--- | :--- | :--- |
-| `AS_size` | 匿名集合大小 | 該會話鎖定的參與車輛數 (N) |
-| `SR` | 猜中率 (Success Rate) | $1 / N$ |
-| `entropy` | 隱私熵 (Entropy) | $\log_2(N)$ |
-| `duration` | 會話持續時長 | $End\_Time - Start\_Time$ |
+* 系統級效能分析
+* RSU 控制行為統計
+* EV 行為影響評估
+* Tier1 / Full System 對照
 
 ---
 
-## 2026-05-03 更新：Tier1 指標對照（重要）
+## 🟦 基礎欄位（所有版本共用）
 
-為了對齊新版程式碼（Tier1 = deterministic bias、且與 corridor 隔離），以下幾個欄位解讀請以「**每個 tick（10Hz）**」為準：
+| 欄位               | 說明                                     |
+| ---------------- | -------------------------------------- |
+| `time`           | 模擬時間（秒，`simTime()`）                    |
+| `rsu_id`         | RSU 編號                                 |
+| `controlMode`    | 當前模式（Baseline / Tier1 / Full_System 等） |
+| `evExists`       | 是否偵測到 EV（0/1）                          |
+| `mzActive`       | Mix Zone 是否啟動                          |
+| `corridorActive` | Corridor 系統是否啟用                        |
 
-- `numVehiclesAffected`, `numLaneChanges`, `numForcedStops`, `numSlowdowns`, `laneIntrusionCount`：都是 **本 tick 的計數**（不是累積總量）。
-- Tier1 only（`enableCorridor=0, enableTier1=1`）的設計目標：
-  - `numForcedStops` 應趨近 0（不做全域強制停車）
-  - `laneIntrusionCount` 應顯著降低（lane reservation 主要屬於 corridor/Full System）
-  - `numSlowdowns`、`numLaneChanges` 反映「偏好」介入（是否成功仍由 SUMO 決定）
-field_descriptions.md
+---
+
+## 🚗 EV 狀態欄位（examples/easy 新增重點）
+
+| 欄位                         | 說明                |
+| -------------------------- | ----------------- |
+| `ev_id`                    | EV ID（可能為空）       |
+| `speed`                    | EV 速度             |
+| `accel`                    | EV 加速度            |
+| `position_x`, `position_y` | EV 座標             |
+| `lane`                     | 車道 index          |
+| `is_stopped`               | 是否停止（speed < 0.1） |
+| `stop_count`               | 累積停止次數            |
+| `min_speed`                | 最低速度              |
+| `dist_to_rsu`              | EV → RSU 距離       |
+| `dist_to_tls`              | EV → 最近紅綠燈距離      |
+
+---
+
+## ⚙️ RSU 控制行為欄位（Tier1 / Full System）
+
+| 欄位                    | 說明                   |
+| --------------------- | -------------------- |
+| `evAssisted`          | 本 tick 是否有 EV assist |
+| `numVehiclesAffected` | 本 tick 影響車輛數         |
+| `numLaneChanges`      | 本 tick lane change 數 |
+| `numSlowdowns`        | 本 tick 減速數           |
+| `numForcedStops`      | 本 tick 強制停車數         |
+| `laneIntrusionCount`  | lane reservation 介入數 |
+| `dynamicDist`         | 動態控制距離（debug）        |
+
+---
+
+## 🧪 Tier1 更新重點（2026/05）
+
+### 🟢 設計目標差異
+
+| 指標                   | Tier1 Only     | Full System      |
+| -------------------- | -------------- | ---------------- |
+| `numForcedStops`     | 🚫 幾乎 0        | ✔ 可能存在           |
+| `laneIntrusionCount` | 🚫 很低          | ✔ 高（reservation） |
+| `numSlowdowns`       | ✔ soft control | ✔ hard control   |
+| `numLaneChanges`     | ✔ bias-based   | ✔ 強制導引           |
+
+---
+
+# 2. 📡 RSU / BSM 日誌（`BSP10Hz-rsu-new.csv`）
+
+## 🧠 用途
+
+* Mix Zone 行為追蹤
+* BSM 封包觀測
+* 匿名性分析
+
+---
+
+## 📌 事件與狀態欄位
+
+| 欄位          | 說明                              |
+| ----------- | ------------------------------- |
+| `subType`   | 事件類型（BSM / START_MZ / ENTER_TS） |
+| `mzState`   | FSM 狀態（INACTIVE → SILENCE）      |
+| `sessionId` | Mix Zone session ID             |
+| `pseudoId`  | 車輛 pseudonym                    |
+
+---
+
+## 👥 Mix Zone 專用欄位
+
+| 欄位                 | 說明           |
+| ------------------ | ------------ |
+| `anonSet`          | 匿名集合大小 N     |
+| `total_members`    | session 成員總數 |
+| `ready_count`      | ACK 車輛數      |
+| `quorum_triggered` | 是否 quorum 觸發 |
+
+---
+
+## 📍 感測資料
+
+| 欄位             | 說明       |
+| -------------- | -------- |
+| `x`, `y`       | RSU/車輛位置 |
+| `speed`, `acl` | 動態狀態     |
+
+---
+
+# 3. 🚘 車輛軌跡（`trip_full.csv`）
+
+## 🧠 用途
+
+* 車輛行為分析
+* 隱私 / 混淆分析
+* EV interaction tracking
+
+---
+
+## 🟦 車輛識別與狀態
+
+| 欄位          | 說明          |
+| ----------- | ----------- |
+| `vehIndex`  | 車輛 ID       |
+| `pseudoId`  | 假名 ID（可變）   |
+| `inSilence` | 是否靜默（Ts）    |
+| `mzActive`  | Mix Zone 狀態 |
+
+---
+
+## 🚗 EV interaction
+
+| 欄位       | 說明                |
+| -------- | ----------------- |
+| `evDist` | 與 EV 距離           |
+| `ttc`    | Time to Collision |
+| `tts`    | Time to Stop      |
+
+---
+
+## 🚙 車流關係
+
+| 欄位             | 說明   |
+| -------------- | ---- |
+| `distToLeader` | 前車距離 |
+| `leaderSpeed`  | 前車速度 |
+
+---
+
+## ⏱ Phase timing
+
+| 欄位           | 說明       |
+| ------------ | -------- |
+| `phaseStart` | BSP 起始   |
+| `phaseEnd`   | BSP 結束   |
+| `duration`   | phase 時長 |
+
+---
+
+# 4. 🔐 隱私評估（`privacy_metrics.csv`）
+
+## 🧠 用途
+
+* Mix Zone privacy quantification
+* anonymity effectiveness
+
+---
+
+| 欄位         | 說明                 |
+| ---------- | ------------------ |
+| `AS_size`  | 匿名集合大小 N           |
+| `SR`       | Success Rate = 1/N |
+| `entropy`  | log2(N)            |
+| `duration` | session 持續時間       |
+
+---
+
+#  版本差異總整理（重點）
+
+## 🆕 examples/easy 新增
+
+* EV 直接 tracking（`ev_id`, `lane`, `accel`）
+* road safety metrics（`is_stopped`, `stop_count`）
+* infrastructure distance（TLS / RSU）
+* Tier1 control breakdown 更細
+
+---
+
+## ⚙️ Full system（原始版）
+
+* 偏 RSU / Mix Zone internal state
+* 強調 FSM / quorum / session control
+* 車輛資訊較少
+
+---
+
+## 🧠 設計哲學差異
+
+| 系統          | 特性                       |
+| ----------- | ------------------------ |
+| Full System | 偏「隱私控制系統內部」              |
+| Tier1/easy  | 偏「交通行為 + EV impact」      |
+| 合併後版本       | 可做論文 evaluation pipeline |
+
