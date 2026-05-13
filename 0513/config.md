@@ -1,16 +1,16 @@
-# 模擬配置定義表 (Simulation Configuration Definitions)
+# 實驗配置定義 (Experimental Configurations)
 
-本文檔定義了 `omnetpp.ini` 中各個 Config 的用途及其對應的數據輸出文件，用於論文數據整理與實驗複現。
+本文件定義了所有實驗配置的變數設置與預期行為。
 
-## 1. 核心性能實驗 (Performance Metrics)
-這組實驗主要用於評估緊急車輛 (EV) 的通行效率與對交通流的干擾。
+## 1. 核心性能實驗 (Core Performance)
+這組實驗用於驗證 BSP 協議在不同控制等級下對 EV 通行效率與交通安全的影響。
 
-| 配置名稱 (Config Name) | 系統定義 (Definition) | 主要功能 (Key Features) | 輸出文件 (Output CSV) |
+| 配置名稱 (Config Name) | 輔助邏輯 (Assistance) | 隱私策略 (Privacy) | 輸出文件 (Performance CSV) |
 | :--- | :--- | :--- | :--- |
-| **BSP10Hz** | **Full System** | 啟用全部功能：Bypass (繞行), Corridor (走廊清空), Mix Zone (隱私)。 | `paper_metrics_full.csv` |
-| **BSP10Hz_Tier1** | **Tier 1 Only** | 僅啟用基礎繞行 (SpeedMode 7)，車輛僅在 EV 接近時做簡單避讓。 | `paper_metrics_tier1.csv` |
-| **BSP10Hz_Baseline** | **Baseline** | 基準對照，無任何 RSU 干預，交通流按 SUMO 預設運行。 | `paper_metrics_baseline.csv` |
-| **Baseline_NoMZ** | **Safety Baseline** | 用於安全邊界分析，重複跑 100 次以取得統計平均值，禁用 Mix Zone。 | `paper_metrics_common.csv` |
+| **BSP10Hz** | **Full System**: Bypass + Corridor | Strategy 2 (Proposed) | `paper_metrics_full.csv` |
+| **BSP10Hz_Tier1** | **Tier 1 Only**: Siren-based only | Strategy 2 (Proposed) | `paper_metrics_tier1.csv` |
+| **BSP10Hz_Baseline** | **Baseline**: No RSU assistance | Strategy 2 (Proposed) | `paper_metrics_baseline.csv` |
+| **Baseline_NoMZ** | **Worst Case**: No assistance + No Privacy | Strategy 0 (NoChange) | `paper_metrics_baseline_nomz.csv` |
 
 ---
 
@@ -19,24 +19,20 @@
 
 | 配置名稱 (Config Name) | 策略類型 (Strategy) | 邏輯描述 (Logic) | 輸出文件 (Privacy CSV) |
 | :--- | :--- | :--- | :--- |
-| **Privacy_NoChange** | Strategy 0 | **No Change**: 車輛始終使用靜態 ID (Worst Case)。 | `privacy_events_nochange.csv` |
-| **Privacy_Periodic** | Strategy 1 | **Periodic Sync**: 全體車輛每 5秒 強制同步更換 ID，無靜默期。 | `privacy_events_periodic.csv` |
-| **Privacy_Proposed** | Strategy 2 | **Proposed Full**: 觸發式 Mix Zone + $\theta$ 閾值 + 1秒 靜默期 (Ts)。 | `privacy_events_proposed.csv` |
+| **Privacy_NoChange** | Strategy 0 | No Change: 車輛始終使用靜態 ID (Worst Case)。 | `privacy_events_nochange.csv` |
+| **Privacy_Periodic** | Strategy 1 | Periodic Sync: 全體車輛每 5秒 強制同步更換 ID，無靜默期。 | `privacy_events_periodic.csv` |
+| **Privacy_Proposed** | Strategy 2 | Proposed Full: 觸發式 Mix Zone + $\theta$ 閾值 + 1秒 靜默期 ($T_s$)。 | `privacy_events_proposed.csv` |
+
+### $\theta$ 閾值敏感度分析 (Sensitivity Analysis)
+*   `Privacy_Proposed_Theta2` ($\theta=2$): 輸出至 `privacy_events_theta2.csv`
+*   `Privacy_Proposed_Theta3` ($\theta=3$): 輸出至 `privacy_events_theta3.csv`
+*   `Privacy_Proposed_Theta4` ($\theta=4$): 輸出至 `privacy_events_theta4.csv`
 
 ---
 
-## 3. 敏感度分析 (Sensitivity Analysis)
-針對提議系統 (Proposed System) 的參數進行微調測試。
+## 3. 交通密度實驗 (Traffic Density)
+這組實驗用於觀察不同交通壓力下，系統的擴展性與隱私混淆效果。
 
-### A. $\theta$ 閾值影響 (Theta Impact)
-| 配置名稱 (Config Name) | $\theta$ 數值 | 用途 | 輸出文件 (Privacy CSV) |
-| :--- | :--- | :--- | :--- |
-| **Privacy_Proposed_Theta2** | 2 | 最小匿名集合大小。 | `privacy_events_proposed_theta2.csv` |
-| **Privacy_Proposed_Theta3** | 3 | 中等匿名要求。 | `privacy_events_proposed_theta3.csv` |
-| **Privacy_Proposed_Theta4** | 4 | 較高匿名要求（可能導致觸發頻率下降）。 | `privacy_events_proposed_theta4.csv` |
-| **Privacy_Proposed_Theta5** | 5 | 最高匿名要求。 | `privacy_events_proposed_theta5.csv` |
-
-### B. 車流密度影響 (Traffic Density)
 | 配置名稱 (Config Name) | 密度等級 | 車輛總數 (Vehicles) | 輸出文件 (Privacy CSV) |
 | :--- | :--- | :--- | :--- |
 | **Privacy_Proposed_DensityLow** | Low | 20 (需配合 .rou.xml) | `privacy_events_proposed_low.csv` |
@@ -44,6 +40,19 @@
 | **Privacy_Proposed_DensityHigh** | High | 100 (需配合 .rou.xml) | `privacy_events_proposed_high.csv` |
 | **Privacy_NoChange_DensityLow** | Low | 20 (基準對照) | `privacy_events_nochange_low.csv` |
 | **Privacy_NoChange_DensityHigh** | High | 100 (基準對照) | `privacy_events_nochange_high.csv` |
+
+---
+
+## 4. 攻擊者模型定義 (Attacker Model)
+本實驗採用最嚴苛的攻擊者假設，以測試系統的隱私防護邊界。
+
+*   **類型 (Type)**：誠實但好奇的基礎設施 (Honest-but-Curious Infrastructure / RSU)。
+*   **能力 (Capabilities)**：
+    *   **本地全知 (Local Omniscience)**：攻擊者監聽 RSU 範圍內所有車輛發送的 BSM 訊息。
+    *   **軌跡重建 (Trajectory Reconstruction)**：攻擊者會根據時間與空間的連續性，記錄每個車輛 ID 的移動軌跡。
+    *   **偽名關聯 (Pseudonym Linking)**：當車輛因 Mix Zone 或週期性更換而變更 ID 時，攻擊者使用 **最近鄰算法 (Nearest Neighbor Algorithm)** 嘗試將新 ID 關聯回舊 ID。
+*   **攻擊目標**：突破 Mix Zone 的匿名性，實現對特定車輛的長距離追蹤。
+*   **強度備註**：目前攻擊者在低密度場景下極強（TSR 接近 1.0），主要壓力測試點在於 **高車流密度 (High Density)** 下，混淆效果是否能有效降低攻擊者的關聯成功率。
 
 ---
 
