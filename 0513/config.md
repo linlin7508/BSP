@@ -44,15 +44,18 @@
 ---
 
 ## 4. 攻擊者模型定義 (Attacker Model)
-本實驗採用最嚴苛的攻擊者假設，以測試系統的隱私防護邊界。
+本實驗採用符合實作邏輯的動態攻擊者模型，以測試系統的隱私防護邊界。
 
 *   **類型 (Type)**：誠實但好奇的基礎設施 (Honest-but-Curious Infrastructure / RSU)。
 *   **能力 (Capabilities)**：
-    *   **本地全知 (Local Omniscience)**：攻擊者監聽 RSU 範圍內所有車輛發送的 BSM 訊息。
-    *   **軌跡重建 (Trajectory Reconstruction)**：攻擊者會根據時間與空間的連續性，記錄每個車輛 ID 的移動軌跡。
-    *   **偽名關聯 (Pseudonym Linking)**：當車輛因 Mix Zone 或週期性更換而變更 ID 時，攻擊者使用 **最近鄰算法 (Nearest Neighbor Algorithm)** 嘗試將新 ID 關聯回舊 ID。
+    *   **本地全知 (Local Omniscience)**：監聽 RSU 範圍內所有 BSM 訊息，但受限於 **觀測機率 (attackerObserveProb ≈ 0.8)**。
+    *   **觀測延遲 (Attacker Delay)**：攻擊者存在 **1.0s 的分析延遲**，無法即時處理最新訊息，這為靜默期提供了對抗空間。
+    *   **加權時空關聯演算法 (Weighted Spatio-Temporal Correlation)**：
+        - 當檢測到假名變更時，攻擊者在 100m 半徑內搜索候選者。
+        - 採用綜合評分機制：$Score = (Distance \times 0.6) + (SpeedDiff \times 0.3) + (LaneDiff \times 0.1)$。
+        - 選擇得分最低（最匹配）的車輛作為關聯目標。
 *   **攻擊目標**：突破 Mix Zone 的匿名性，實現對特定車輛的長距離追蹤。
-*   **強度備註**：目前攻擊者在低密度場景下極強（TSR 接近 1.0），主要壓力測試點在於 **高車流密度 (High Density)** 下，混淆效果是否能有效降低攻擊者的關聯成功率。
+*   **強度備註**：由於具備位置、速度與車道的多維度匹配，該攻擊者在「無靜默期」的場景（如 Periodic Sync）下 TSR 接近 100%。
 
 ---
 
