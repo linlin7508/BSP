@@ -3,9 +3,9 @@
 ## 圖 5-1：不同隱私策略之比較 (依車流密度分類)
 | 隱私策略 | 車流密度 | TSR (追蹤成功率) | 平均 AS_size | 平均隱私熵 (Entropy) |
 | :--- | :--- | :---: | :---: | :---: |
-| **No Change (基準)** | EASY | 100% | 1| No data |
-| **No Change (基準)** | MID  | 100% | 1 | No data |
-| **No Change (基準)** | HARD | 100% | 1 | No data |
+| **No Change (基準)** | EASY | 100% | 1|  0 |
+| **No Change (基準)** | MID  | 100% | 1 | 0 |
+| **No Change (基準)** | HARD | 100% | 1 | 0 |
 | **Periodic Sync** | HARD | 79.31% | 4.80 | 1.60 |
 | **Periodic Sync** | MID  | 90.33% | 9.67 | 2.77 |
 | **Periodic Sync** | EASY | 51.85% | 5.18 | 1.70 |
