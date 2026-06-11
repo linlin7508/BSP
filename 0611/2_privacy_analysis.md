@@ -6,9 +6,9 @@
 | **No Change (基準)** | EASY | 100% | 1|  0 |
 | **No Change (基準)** | MID  | 100% | 1 | 0 |
 | **No Change (基準)** | HARD | 100% | 1 | 0 |
-| **Periodic Sync** | HARD | 79.31% | 4.80 | 1.60 |
-| **Periodic Sync** | MID  | 90.33% | 9.67 | 2.77 |
-| **Periodic Sync** | EASY | 51.85% | 5.18 | 1.70 |
+| **Periodic Sync** | HARD | 79.31% | 5.16 | 1.72 |
+| **Periodic Sync** | MID  | 65.77% | 5.16 | 1.72 |
+| **Periodic Sync** | EASY | 43.48% | 5.05 | 1.69 |
 | **Proposed Full** | HARD | **0.00%** | 2.00 | 1.00 |
 | **Proposed Full** | MID  | **0.00%** | 4.27 | 2.09 |
 | **Proposed Full** | EASY | **0.00%** | 7.00 | 2.77 |
