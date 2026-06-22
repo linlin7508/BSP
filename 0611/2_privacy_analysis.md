@@ -6,9 +6,9 @@
 | **No Change (基準)** | LOW | 100% | 1|  0 |
 | **No Change (基準)** | MID  | 100% | 1 | 0 |
 | **No Change (基準)** | HIGH | 100% | 1 | 0 |
-| **Periodic Sync** | LOW | 79.31% | 5.16 | 1.72 |
-| **Periodic Sync** | MID  | 65.77% | 5.16 | 1.72 |
-| **Periodic Sync** | HIGH | 43.48% | 5.05 | 1.69 |
+| **Periodic Sync** | LOW | 79.31% | 2.1 | 1.07 |
+| **Periodic Sync** | MID  | 65.77% | 3.3 | 1.72 |
+| **Periodic Sync** | HIGH | 43.48% | 5.05 | 2.34 |
 | **Proposed Full** | LOW | **0.00%** | 2.00 | 1.00 |
 | **Proposed Full** | MID  | **0.00%** | 4.27 | 2.09 |
 | **Proposed Full** | HIGH | **0.00%** | 7.00 | 2.77 |
