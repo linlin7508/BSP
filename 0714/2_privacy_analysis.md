@@ -17,7 +17,7 @@
 
 ### 觸發結果總表（主表）
 
-| theta | density | runId | trigger_RSU | N_trigger | avg_AS_size | avg_entropy | trigger_rate |
+| theta | density | trigger_RSU | N_trigger | avg_AS_size | avg_entropy | trigger_rate |
 | :---: | :---: | :--- | :--- | :---: | :---: | :---: | :---: |
 | 2 | EASY | 3, 7, 8, 11, 12, 15, 16 | 7 | 7.14 | 2.64 | 0.0024% |
 | 2 | MID | 11, 12, 15, 16 | 4 | 4.50 | 2.14 | 0.0020% |
